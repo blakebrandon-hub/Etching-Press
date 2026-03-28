@@ -58,7 +58,7 @@ The game engine:
 ## 🚀 Quick Start
 
 ### **1. Download the Builder**
-Clone this repo or [download the HTML file](link-to-file).
+Clone this repo or [download the HTML file](https://github.com/blakebrandon-hub/Etching-Press/blob/main/etching-press.html).
 
 ### **2. Open `etching-press.html` in your browser**
 No server needed — it's a standalone tool.
