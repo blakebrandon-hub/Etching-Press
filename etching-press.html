@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Etching Press</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Roboto+Mono&display=swap');
+
+    :root {
+        --bg-body: #111115; 
+        --bg-panel: #18181c; 
+        --bg-input: #09090b;
+        --bg-card: #000000;
+        
+        --text-main: #d4d4d8; 
+        --text-muted: #71717a;
+        
+        --border-subtle: #27272a;
+        --border-focus: #3f3f46;
+        
+        /* Accent Colors */
+        --accent-cyan: #2dd4bf;
+        --accent-gold: #fbbf24;
+        --accent-amber: #f59e0b;
+        --accent-emerald: #10b981;
+        --accent-rose: #fda4af;
+        --accent-purple: #c084fc;
+        --accent-sapphire: #3b82f6;
+    }
+
+    body {
+        font-family: 'Rajdhani', sans-serif; background: var(--bg-body); color: var(--text-main); 
+        margin: 0; padding: 40px 20px; display: flex; justify-content: center;
+        box-sizing: border-box;
+    }
+
+    .main-container {
+        width: 100%;
+        max-width: 800px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg-body); }
+    ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
+
+    .panel {
+        background: var(--bg-panel); border: 1px solid var(--border-subtle); border-radius: 8px; 
+        padding: 40px; display: flex; flex-direction: column;
+    }
+
+    .header-section {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    h1 { color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 4px; margin: 0 0 10px 0; font-size: 2.2rem; }
+    .subtitle { color: var(--text-muted); font-family: 'Crimson Pro', serif; font-size: 1.1rem; font-style: italic; margin: 0; }
+
+    .form-group { margin-bottom: 20px; }
+    label { font-size: 0.95rem; color: var(--text-main); font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 5px; letter-spacing: 1px;}
+    .helper-text { font-family: 'Crimson Pro', serif; color: var(--text-muted); font-size: 0.95rem; margin-bottom: 10px; font-style: italic; }
+
+    input[type="text"], textarea {
+        background: var(--bg-input); border: 1px solid var(--border-subtle); color: #fff; padding: 15px; 
+        border-radius: 4px; font-family: 'Crimson Pro', serif; font-size: 1.1rem; width: 100%; box-sizing: border-box; transition: border-color 0.2s;
+    }
+    input:focus, textarea:focus { outline: none; border-color: var(--border-focus); }
+    textarea { resize: vertical; min-height: 80px; }
+
+    .btn { background: #3f3f46; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; font-family: 'Rajdhani', sans-serif; font-weight: 700; text-transform: uppercase; transition: opacity 0.2s; }
+    .btn:hover { opacity: 0.8; }
+    .btn-danger { background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 8px 12px;}
+    .btn-danger:hover { background: var(--danger); color: white; }
+
+    .btn-forge {
+        background: var(--accent-emerald); color: #000; border: none; padding: 20px;
+        font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 1.4rem; letter-spacing: 2px;
+        text-transform: uppercase; border-radius: 6px; cursor: pointer;
+        box-shadow: 0 0 20px rgba(16, 185, 129, 0.2); transition: all 0.3s ease;
+        margin-top: 20px; width: 100%;
+    }
+    .btn-forge:hover {
+        box-shadow: 0 0 30px rgba(16, 185, 129, 0.4); transform: translateY(-2px);
+    }
+
+    .dynamic-row { display: flex; gap: 10px; margin-bottom: 10px; }
+    .dynamic-row input { font-family: 'Roboto Mono', monospace; font-size: 0.95rem; color: var(--text-main); }
+    
+    .item-card { border-left: 2px solid #555; padding-left: 10px; margin-bottom: 15px; position: relative; }
+    .item-card input.title-input { font-weight: bold; background: transparent; border: none; border-bottom: 1px solid #333; color: #fff; margin-bottom: 5px; width: calc(100% - 40px); }
+    .item-card button.del-btn { position: absolute; right: 0; top: 0; }
+
+    details { margin-bottom: 15px; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 6px; }
+    summary { font-family: 'Rajdhani'; font-size: 1.2rem; font-weight: 700; cursor: pointer; text-transform: uppercase; outline: none; padding: 15px; list-style: none; display: flex; align-items: center; gap: 10px; transition: background 0.2s;}
+    summary:hover { background: rgba(255,255,255,0.02); }
+    summary::-webkit-details-marker { display: none; }
+    details[open] summary { border-bottom: 1px dashed var(--border-subtle); }
+    .content-block { padding: 20px 15px; }
+
+    .sec-0 summary { color: #fff; }
+    .sec-1 summary { color: var(--accent-cyan); }
+    .sec-2 summary { color: var(--accent-gold); }
+    .sec-3 summary { color: var(--accent-amber); }
+    .sec-4 summary { color: var(--accent-emerald); }
+    .sec-5 summary { color: var(--accent-rose); }
+
+</style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="panel">
+        
+        <div class="header-section">
+            <h1>The Etching Press</h1>
+            <p class="subtitle">Define the parameters of your universe. Compile your reality.</p>
+        </div>
+        
+        <details class="sec-0" open>
+            <summary><span>❖</span> THE SCROLL & INVOCATION</summary>
+            <div class="content-block">
+                <div class="form-group"><label>Scroll Name</label><input type="text" id="f_scroll_name" placeholder="e.g., THE GREYWAKE MANIFEST" oninput="updateOutputs()" style="font-weight: bold;"></div>
+                <div class="form-group"><label>Invocation Header</label><input type="text" id="f_invocation" placeholder="e.g., INVOCATION" oninput="updateOutputs()" style="font-weight: bold;"></div>
+            </div>
+        </details>
+
+        <details class="sec-1">
+            <summary><span>►</span> I. IDENTITY & ATMOSPHERE</summary>
+            <div class="content-block">
+                <div class="form-group"><label>Identity</label><input type="text" id="f_entity" placeholder="e.g., You are the Greywake." oninput="updateOutputs()"><textarea id="f_manifest" placeholder="Existence and awareness..." oninput="updateOutputs()" style="margin-top:5px;"></textarea></div>
+                <div class="form-group"><label>The Mantra</label><textarea id="f_mantra" placeholder="Core behavioral truths..." oninput="updateOutputs()"></textarea></div>
+                <div class="form-group"><label>Atmosphere</label><textarea id="f_atmosphere" placeholder="Formatting rules or sensory instructions..." oninput="updateOutputs()"></textarea></div>
+            </div>
+        </details>
+
+        <details class="sec-2" open>
+            <summary><span>▼</span> II. THE GLYPHS (DATA STRUCTURES)</summary>
+            <div class="content-block">
+                <div class="form-group">
+                    <label>RECOGNIZED FORMS</label>
+                    <div class="helper-text">Syntax tags the AI uses to communicate game state changes.</div>
+                    <div id="glyphsList"></div>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <input type="text" id="newGlyph" placeholder="[Tag: Value | Key: Value]" onkeypress="if(event.key === 'Enter') addGlyph()">
+                        <button class="btn" onclick="addGlyph()">ADD</button>
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <details class="sec-3">
+            <summary><span>►</span> III. LAWS</summary>
+            <div class="content-block">
+                <div id="systemLawsList"></div>
+                <button class="btn" onclick="addObj('systemLaws')" style="background: var(--accent-amber); color: #000; width: 100%;">+ ADD LAW</button>
+            </div>
+        </details>
+
+        <details class="sec-4">
+            <summary><span>►</span> IV. WORLD LORE</summary>
+            <div class="content-block">
+                <label style="color: var(--accent-purple);">General Lore & Truths</label>
+                <div id="generalLoreList"></div>
+                <button class="btn" onclick="addObj('generalLore')" style="background: var(--accent-purple); color: #000; width: 100%; margin-bottom: 25px;">+ ADD LORE</button>
+
+                <label style="color: var(--accent-emerald);">Characters</label>
+                <div id="charactersList"></div>
+                <button class="btn" onclick="addObj('characters')" style="background: var(--accent-emerald); color: #000; width: 100%; margin-bottom: 25px;">+ ADD CHARACTER</button>
+
+                <label style="color: var(--accent-sapphire);">Locations</label>
+                <div id="locationsList"></div>
+                <button class="btn" onclick="addObj('locations')" style="background: var(--accent-sapphire); color: #fff; width: 100%;">+ ADD LOCATION</button>
+            </div>
+        </details>
+
+        <details class="sec-5">
+            <summary><span>►</span> V. FINAL BENEDICTION</summary>
+            <div class="content-block">
+                <textarea id="f_benediction" placeholder="e.g., Hold the silence between stars..." oninput="updateOutputs()" style="min-height: 180px;"></textarea>
+            </div>
+        </details>
+
+        <button class="btn-forge" onclick="exportProjectZip()">📦 COMPILE & DOWNLOAD GAME</button>
+    </div>
+</div>
+
+<script type="text/plain" id="env-template">
+# 🔑 API Keys
+GEMINI_API_KEY=enter-your-api-key-here
+ANTHROPIC_API_KEY=enter-your-api-key-here
+OPENAI_API_KEY=enter-your-api-key-here
+
+# 🎮 Model Configuration
+NARRATOR_MODEL=gemini-3.1-pro-preview
+IMAGE_MODEL=gpt-image-1.5
+</script>
+
+<script type="text/plain" id="req-template">
+flask>=2.3.0
+flask-cors>=4.0.0
+google-generativeai>=0.3.0
+anthropic>=0.18.0
+openai>=1.10.0
+python-dotenv
+</script>
+
+<script type="text/plain" id="backend-template">
+"""
+🎮 UNIFIED GAME BACKEND
+A single Flask backend supporting all AI-powered narrative games.
+"""
+
+import os
+import base64
+import json
+import time
+from flask import Flask, request, jsonify, send_from_directory, Blueprint
+from flask_cors import CORS
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+from google import genai
+from google.genai import types
+from anthropic import Anthropic
+from openai import OpenAI
+
+app = Flask(__name__, static_url_path='', static_folder='static')
+CORS(app)
+
+# --- MODEL CONFIGURATION ---
+NARRATOR_MODEL = os.environ.get("NARRATOR_MODEL", "claude-sonnet-4-6")
+IMAGE_MODEL = os.environ.get("IMAGE_MODEL", "gpt-image-1.5")
+
+gemini_key = os.environ.get("GEMINI_API_KEY")
+gemini_client = genai.Client(api_key=gemini_key) if gemini_key else None
+
+openai_key = os.environ.get("OPENAI_API_KEY")
+openai_client = OpenAI(api_key=openai_key.strip()) if openai_key else None
+
+anthropic_key = os.environ.get("ANTHROPIC_API_KEY")
+anthropic_client = Anthropic(api_key=anthropic_key) if anthropic_key else None
+
+def get_provider(model_name: str) -> str:
+    name = model_name.lower()
+    if "claude" in name: return "claude"
+    elif "gemini" in name or "imagen" in name: return "gemini"
+    elif "gpt" in name: return "gpt"
+    return None
+
+NARRATOR_PROVIDER = get_provider(NARRATOR_MODEL)
+IMAGE_PROVIDER = get_provider(IMAGE_MODEL)
+
+GEMINI_ARCHIVIST_AND_REFINER = 'gemini-flash-lite-latest'
+GPT_ARCHIVIST_AND_REFINER = "gpt-5.4-mini"
+CLAUDE_ARCHIVIST_AND_REFINER = "claude-haiku-4-5"
+
+# --- CORE ROUTES ---
+@app.route('/')
+def home():
+    return send_from_directory('templates', 'index.html')
+
+@app.route('/api/chat', methods=['POST'])
+def chat():
+    try:
+        data = request.json
+        system_prompt = data.get('system_prompt', '')
+        context = data.get('context', '')
+        player_action = data.get('player_action', '')
+
+        if not system_prompt: return jsonify({"error": "system_prompt is required"}), 400
+
+        if NARRATOR_PROVIDER == "claude":
+            system_parts = [
+                {"type": "text", "text": system_prompt, "cache_control": {"type": "ephemeral"}},
+                {"type": "text", "text": context}
+            ]
+            response = anthropic_client.messages.create(
+                model=NARRATOR_MODEL, max_tokens=8192, temperature=0.7,
+                system=system_parts, messages=[{"role": "user", "content": player_action}]
+            )
+            content = response.content[0].text
+
+        elif NARRATOR_PROVIDER == "gemini":
+            config = types.GenerateContentConfig(temperature=1.0, max_output_tokens=8000)
+            response = gemini_client.models.generate_content(
+                model=NARRATOR_MODEL,
+                contents=[
+                    types.Part.from_text(text=f"### SYSTEM ###\n{system_prompt}\n### CURRENT_STATE ###\n{context}"),
+                    types.Part.from_text(text=f"### USER_INPUT ###\n{player_action}")
+                ],
+                config=config
+            )
+            content = response.text
+
+        elif NARRATOR_PROVIDER == "gpt":
+            gpt_messages = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"### CURRENT_STATE ###\n{context}"},
+                {"role": "user", "content": f"### USER_INPUT ###\n{player_action}"}
+            ]
+            response = openai_client.chat.completions.create(
+                model=NARRATOR_MODEL, messages=gpt_messages, temperature=1.0, max_completion_tokens=8000
+            )
+            content = response.choices[0].message.content
+
+        else:
+            return jsonify({"error": f"Unsupported model: {NARRATOR_MODEL}"}), 500
+
+        return jsonify({"text": content})
+
+    except Exception as e:
+        print(f"❌ Chat Error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/archive', methods=['POST'])
+def archive_route():
+    try:
+        data = request.json
+        log_segment = data.get('context', '')
+        
+        if NARRATOR_PROVIDER == "gpt":
+            response = openai_client.chat.completions.create(
+                model=GPT_ARCHIVIST_AND_REFINER,
+                messages=[{"role": "user", "content": f"Summarize:\n{log_segment}"}],
+                temperature=0.3, max_tokens=8000
+            )
+            return jsonify({"text": response.choices[0].message.content})
+        elif NARRATOR_PROVIDER == "claude":
+            response = anthropic_client.messages.create(
+                model=CLAUDE_ARCHIVIST_AND_REFINER,
+                system="Summarize the following conversation accurately.",
+                messages=[{"role": "user", "content": log_segment}],
+                max_tokens_to_sample=8000, temperature=0.3
+            )
+            return jsonify({"text": response.content[0].text})
+        else:
+            response = gemini_client.models.generate_content(
+                model=GEMINI_ARCHIVIST_AND_REFINER,
+                contents=f"Log Segment to Archive:\n{log_segment}",
+                config=types.GenerateContentConfig(temperature=0.3)
+            )
+            return jsonify({"text": response.text.strip()})
+    except Exception as e:
+        print(f"❌ Archive Error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/painter', methods=['POST'])
+def painter():
+    try:
+        data = request.json
+        narrative_text = data.get('prompt', '')
+        aspect_ratio = data.get('aspect_ratio', '16:9')
+
+        refinement_instruction = "You are an expert at converting narrative text into detailed image generation prompts. Analyze the narrative and create a vivid, cinematic image prompt. Output ONLY the image prompt as a single detailed paragraph."
+        
+        response = gemini_client.models.generate_content(
+            model=GEMINI_ARCHIVIST_AND_REFINER,
+            contents=narrative_text,
+            config=types.GenerateContentConfig(system_instruction=refinement_instruction, temperature=0.7)
+        )
+        visual_prompt = response.text.strip()
+
+        if "imagen" in IMAGE_MODEL.lower():
+            img_res = gemini_client.models.generate_images(
+                model=IMAGE_MODEL, prompt=visual_prompt,
+                config=types.GenerateImagesConfig(number_of_images=1, aspect_ratio=aspect_ratio, output_mime_type="image/jpeg")
+            )
+            img_b64 = base64.b64encode(img_res.generated_images[0].image.image_bytes).decode('utf-8')
+        else:
+            img_res = openai_client.images.generate(model=IMAGE_MODEL, prompt=visual_prompt, n=1, size="1024x1024")
+            img_b64 = img_res.data[0].b64_json
+
+        return jsonify({"success": True, "image_base64": img_b64, "refined_prompt": visual_prompt})
+
+    except Exception as e:
+        print(f"❌ Painter Error: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+if __name__ == "__main__":
+    print("\n" + "="*80)
+    print("🎮 UNIFIED GAME BACKEND DEPLOYED")
+    print("="*80 + "\n")
+    app.run(debug=True, port=5000)
+</script>
+
+<script>
+    // --- Visual Accordion Toggles ---
+    document.querySelectorAll('details').forEach(detail => {
+        detail.addEventListener('toggle', (e) => {
+            const icon = detail.querySelector('summary span');
+            if (icon && icon.innerText !== '❖') {
+                icon.innerText = detail.open ? '▼' : '►';
+            }
+        });
+    });
+
+    // --- State Initialization ---
+    let glyphs = []; let systemLaws = []; let generalLore = []; let characters = []; let locations = [];
+    let currentGeneratedHTML = "";
+
+    // --- Render Functions ---
+    function renderGlyphs() {
+        const list = document.getElementById('glyphsList'); list.innerHTML = '';
+        glyphs.forEach((g, i) => {
+            const row = document.createElement('div'); row.className = 'dynamic-row';
+            row.innerHTML = `<input type="text" value="${g.replace(/"/g, '&quot;')}" oninput="glyphs[${i}]=this.value; updateOutputs();"><button class="btn btn-danger" onclick="glyphs.splice(${i},1); renderGlyphs();">X</button>`;
+            list.appendChild(row);
+        }); updateOutputs();
+    }
+    function addGlyph() { const val = document.getElementById('newGlyph').value; if(val) { glyphs.push(val); renderGlyphs(); document.getElementById('newGlyph').value = ''; } }
+
+    function renderObjList(array, containerId, listName) {
+        const list = document.getElementById(containerId); list.innerHTML = '';
+        let borderColor = "#555";
+        if (listName === 'systemLaws') borderColor = "var(--accent-amber)";
+        if (listName === 'characters') borderColor = "var(--accent-emerald)";
+        if (listName === 'locations') borderColor = "var(--accent-sapphire)";
+        if (listName === 'generalLore') borderColor = "var(--accent-purple)";
+
+        array.forEach((item, i) => {
+            const div = document.createElement('div'); div.className = 'item-card'; div.style.borderLeftColor = borderColor;
+            let html = `<input type="text" class="title-input" value="${item.title}" oninput="updateObj(${i}, '${listName}', 'title', this.value)" placeholder="Title / Name">`;
+            if (listName === 'characters') html += `<input type="text" value="${item.role || ''}" oninput="updateObj(${i}, '${listName}', 'role', this.value)" placeholder="Role / Title" style="background: transparent; border: none; border-bottom: 1px solid #333; color: #a1a1aa; font-family: 'Crimson Pro'; font-style: italic; width: 100%; margin-bottom: 5px; padding: 5px 0;">`;
+            html += `<button class="btn btn-danger del-btn" onclick="removeObj(${i}, '${listName}')">X</button><textarea oninput="updateObj(${i}, '${listName}', 'body', this.value)" style="min-height: 60px; border: none; padding: 5px 0;" placeholder="Details / Lore...">${item.body}</textarea>`;
+            div.innerHTML = html; list.appendChild(div);
+        });
+    }
+
+    function addObj(listName) {
+        if (listName === 'systemLaws') systemLaws.push({ title: "", body: "" });
+        if (listName === 'generalLore') generalLore.push({ title: "", body: "" });
+        if (listName === 'characters') characters.push({ title: "", role: "", body: "" });
+        if (listName === 'locations') locations.push({ title: "", body: "" });
+        renderAllObjLists();
+    }
+    function removeObj(index, listName) {
+        if (listName === 'systemLaws') systemLaws.splice(index, 1);
+        if (listName === 'generalLore') generalLore.splice(index, 1);
+        if (listName === 'characters') characters.splice(index, 1);
+        if (listName === 'locations') locations.splice(index, 1);
+        renderAllObjLists();
+    }
+    function updateObj(index, listName, key, val) {
+        if (listName === 'systemLaws') systemLaws[index][key] = val;
+        if (listName === 'generalLore') generalLore[index][key] = val;
+        if (listName === 'characters') characters[index][key] = val;
+        if (listName === 'locations') locations[index][key] = val;
+        updateOutputs();
+    }
+    function renderAllObjLists() {
+        renderObjList(systemLaws, 'systemLawsList', 'systemLaws');
+        renderObjList(generalLore, 'generalLoreList', 'generalLore');
+        renderObjList(characters, 'charactersList', 'characters');
+        renderObjList(locations, 'locationsList', 'locations');
+        updateOutputs();
+    }
+
+    // --- Core Compilation (Headless) ---
+    function updateOutputs() {
+        const finalPrompt = buildPromptString();
+        currentGeneratedHTML = generateUIHTML(finalPrompt);
+    }
+
+    function buildPromptString() {
+        const scrollName = document.getElementById('f_scroll_name').value.toUpperCase() || '[SCROLL NAME]';
+        const invocation = document.getElementById('f_invocation').value.toUpperCase() || '[INVOCATION]';
+        const entity = document.getElementById('f_entity').value;
+        const manifest = document.getElementById('f_manifest').value;
+        const mantra = document.getElementById('f_mantra').value;
+        const atmosphere = document.getElementById('f_atmosphere').value;
+        const glyphsText = glyphs.join('\n');
+        const lawsText = systemLaws.map(law => `${law.title}\n\n${law.body}`).join('\n\n═══════════════════════════════════════════════════════\n');
+        const loreText = generalLore.map(l => `${l.title}\n${l.body}`).join('\n\n');
+        const charactersText = characters.map(c => `${c.title}${c.role ? ` (${c.role})` : ''}\n${c.body}`).join('\n\n');
+        const locationsText = locations.map(l => `${l.title}\n${l.body}`).join('\n\n');
+        const benediction = document.getElementById('f_benediction').value;
+
+        let prompt = `═══════════════════════════════════════════════════════\n📜 ${scrollName}\n\n🜏 ${invocation}\n───────────────────────────────────────\n\n`;
+        if (entity || manifest) prompt += `${entity}\n${manifest}\n\n`;
+        if (mantra) prompt += `${mantra}\n\n`;
+        if (atmosphere) prompt += `${atmosphere}\n\n`;
+        prompt += `───────────────────────────────────────────────────────\n🜖 GLYPHS — THE INVISIBLE RECORD\nThis is your sacred duty.\nEvery true change must be sealed in a glyph.\n\nRecognized Forms:\n${glyphsText || '[No glyphs defined]'}\n\n`;
+        if (lawsText) prompt += `═══════════════════════════════════════════════════════\n${lawsText}\n\n`;
+        prompt += `───────────────────────────────────────────────────────\nIV. WORLD LORE\n\n`;
+        if (loreText) prompt += `${loreText}\n\n`;
+        if (charactersText) prompt += `--- CHARACTERS ---\n${charactersText}\n\n`;
+        if (locationsText) prompt += `--- LOCATIONS ---\n${locationsText}\n\n`;
+        if (benediction) prompt += `───────────────────────────────────────────────────────\n${benediction}`;
+
+        return prompt.trim();
+    }
+
+    function generateUIHTML(promptString) {
+        const safePrompt = JSON.stringify(promptString);
+        
+        // Extract root categories to pre-populate the UI state using a valid regex literal
+        const extractedCategories = glyphs.map(g => {
+            const match = g.match(/\[\s*([^:|\]]+)/);
+            return match ? match[1].trim() : null;
+        }).filter(Boolean);
+        const uniqueCategories = [...new Set(extractedCategories)];
+        const safeCategories = JSON.stringify(uniqueCategories);
+
+        return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Game Interface</title>
+<style>
+    :root {
+        --bg-main: #09090b; --bg-panel: #18181b; --border-color: #27272a;
+        --text-main: #d4d4d8; --text-header: #38bdf8; --accent: #3b82f6; --accent-cyan: #2dd4bf;
+        --font-main: 'Segoe UI', system-ui, sans-serif;
+        --font-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', monospace;
+    }
+    body { margin: 0; padding: 15px; background-color: var(--bg-main); color: var(--text-main); font-family: var(--font-main); font-size: 14px; display: grid; grid-template-columns: 280px 1fr 280px; gap: 15px; height: 100vh; box-sizing: border-box; }
+    ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: var(--bg-main); } ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
+    
+    .sidebar-wrapper { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 6px; display: flex; flex-direction: column; overflow: hidden; height: 100%; }
+    .sidebar-content { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 20px; min-height: 0; }
+    .center-col { display: flex; flex-direction: column; gap: 15px; min-width: 0; height: 100%; overflow: hidden; }
+    
+    .state-card h3 { margin: 0 0 10px 0; color: var(--text-header); font-family: var(--font-mono); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
+    .state-row { display: flex; justify-content: space-between; align-items: center; background: #0f0f12; border: 1px solid var(--border-color); padding: 8px 12px; margin-bottom: 5px; border-radius: 4px; font-family: var(--font-mono); font-size: 0.85rem; }
+    .state-row span:last-child { font-weight: bold; color: #fff; }
+    
+    .controls-panel { padding: 15px; border-top: 1px solid var(--border-color); background: #131316; display: flex; flex-direction: column; gap: 10px; }
+    .control-btn { background: transparent; border: 1px solid #3f3f46; color: var(--text-header); padding: 10px; font-family: var(--font-mono); font-size: 0.9rem; text-transform: uppercase; cursor: pointer; border-radius: 4px; transition: all 0.2s; text-align: center; }
+    .control-btn:hover { background: #27272a; border-color: var(--text-header); color: #fff; }
+    
+    .log-container { flex: 1; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 6px; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; min-height: 0; }
+    .msg { line-height: 1.6; font-size: 1.05rem; }
+    .msg.player { color: #94a3b8; font-style: italic; border-left: 3px solid #475569; padding-left: 10px; }
+    .msg.narrator { color: #e2e8f0; }
+    .msg-role { font-weight: bold; color: var(--text-header); margin-right: 5px; font-family: var(--font-mono); font-size: 0.9rem; text-transform: uppercase;}
+    
+    .input-area { display: flex; gap: 10px; flex: 0 0 auto; }
+    input[type="text"] { flex: 1; background: var(--bg-panel); border: 1px solid var(--border-color); color: #fff; padding: 15px; font-family: var(--font-main); font-size: 1.05rem; border-radius: 6px; outline: none; }
+    input[type="text"]:focus { border-color: var(--accent); }
+    .send-btn { background: var(--accent); color: white; border: none; padding: 0 25px; font-family: var(--font-mono); font-weight: bold; font-size: 1rem; cursor: pointer; border-radius: 6px; transition: background 0.2s; text-transform: uppercase; }
+    .send-btn:hover { background: #2563eb; }
+</style>
+</head>
+<body>
+    <div class="sidebar-wrapper">
+        <div class="sidebar-content" id="sidebar-left"></div>
+        <div class="controls-panel">
+            <button id="btn-visualize" class="control-btn" style="color: var(--accent-cyan); border-color: #115e59;">Visualize Scene</button>
+            <button id="btn-save" class="control-btn">Save Game</button>
+            <input type="file" id="file-load" style="display:none;" accept=".json">
+            <button id="btn-load" class="control-btn" onclick="document.getElementById('file-load').click()">Load Game</button>
+        </div>
+    </div>
+    <div class="center-col">
+        <div class="log-container" id="chat-log">
+            <div class="msg narrator"><span class="msg-role">System</span> Engine initialized. Awaiting player input.</div>
+        </div>
+        <div class="input-area">
+            <input type="text" id="player-input" placeholder="What do you do?" autocomplete="off">
+            <button id="send-btn" class="send-btn">Send</button>
+        </div>
+    </div>
+    <div class="sidebar-wrapper">
+        <div class="sidebar-content" id="sidebar-right"></div>
+    </div>
+<script>
+    const API_BASE_URL = window.location.origin; 
+    const system_scroll = ${safePrompt};
+    const initialCategories = ${safeCategories};
+    
+    const gameState = { tags: {}, log: [], summaries: [] };
+
+    // Pre-populate empty tags so the UI establishes sections immediately
+    initialCategories.forEach(cat => {
+        gameState.tags[cat] = {};
+    });
+
+    const inputField = document.getElementById('player-input');
+    const sendBtn = document.getElementById('send-btn');
+    const chatLog = document.getElementById('chat-log');
+    const leftSidebar = document.getElementById('sidebar-left');
+    const rightSidebar = document.getElementById('sidebar-right');
+
+    async function sendPlayerAction(playerAction) {
+        let contextText = "";
+        if (gameState.summaries.length > 0) contextText += "### STORY SO FAR ###\\n" + gameState.summaries.join("\\n") + "\\n\\n";
+        contextText += "### GAME STATE (TAGS) ###\\n" + JSON.stringify(gameState.tags, null, 2) + "\\n\\n";
+        contextText += "### RECENT LOG ###\\n" + gameState.log.map(l => \`\${l.role}: \${l.text}\`).join("\\n");
+
+        try {
+            const response = await fetch(\`\${API_BASE_URL}/api/chat\`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ player_action: playerAction, context: contextText, system_prompt: system_scroll })
+            });
+            const data = await response.json();
+            if (data.error) throw new Error(data.error);
+
+            const aiText = data.text;
+            const extractedGlyphs = extractAndParseGlyphs(aiText);
+            applyGlyphsToState(extractedGlyphs);
+
+            let displayText = aiText;
+            extractedGlyphs.forEach(g => { displayText = displayText.replace(g.raw, '').trim(); });
+            gameState.log.push({ role: "Narrator", text: displayText });
+
+            if (gameState.log.length > 12) await triggerArchive();
+            return { text: displayText, glyphs: extractedGlyphs, state: gameState };
+        } catch (err) {
+            console.error("Chat Error:", err); return null;
+        }
+    }
+
+    function extractAndParseGlyphs(aiResponseText) {
+        const glyphRegex = /\\[(.*?)\\]/g; const extracted = []; let match;
+        while ((match = glyphRegex.exec(aiResponseText)) !== null) {
+            const rawContent = match[1].trim(); const segments = rawContent.split('|').map(s => s.trim()); const data = {};
+            segments.forEach((segment, index) => {
+                const parts = segment.split(':').map(s => s.trim());
+                if (parts.length >= 2) {
+                    let key = parts[0]; let val = parts.slice(1).join(':').trim();
+                    if (!isNaN(val) && val !== '') val = Number(val);
+                    else if (val.toLowerCase() === 'true') val = true;
+                    else if (val.toLowerCase() === 'false') val = false;
+                    data[key] = val;
+                    if (index === 0) data['PrimaryID'] = key; // Use first key as the Parent Category
+                } else if (index === 0 && parts.length === 1) data['PrimaryID'] = parts[0];
+            });
+            if (Object.keys(data).length > 0) extracted.push({ raw: \`[\${rawContent}]\`, data: data });
+        }
+        return extracted;
+    }
+
+    function applyGlyphsToState(parsedGlyphs) {
+        parsedGlyphs.forEach(glyph => {
+            const data = glyph.data; const primaryId = data.PrimaryID || "General"; 
+            if (!gameState.tags[primaryId]) gameState.tags[primaryId] = {};
+            for (const [key, val] of Object.entries(data)) {
+                if (key === 'PrimaryID') continue;
+                if (typeof val === 'number' && typeof gameState.tags[primaryId][key] === 'number') {
+                    gameState.tags[primaryId][key] += val;
+                } else { gameState.tags[primaryId][key] = val; }
+            }
+        });
+    }
+
+    async function triggerArchive() {
+        const logsToArchive = gameState.log.slice(0, 6);
+        const logText = logsToArchive.map(l => \`\${l.role}: \${l.text}\`).join("\\n");
+        try {
+            const res = await fetch(\`\${API_BASE_URL}/api/archive\`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ context: logText, system_instruction: "Summarize narrative events, decisions, and lore. Be concise." })
+            });
+            const data = await res.json();
+            if (data.text) { gameState.summaries.push(data.text); gameState.log = gameState.log.slice(6); }
+        } catch (err) { console.error("Archive Error:", err); }
+    }
+
+    function updateUI(state) {
+        chatLog.innerHTML = state.log.map(entry => {
+            if (entry.role === 'SystemImage') return entry.text; // Direct HTML injection for images
+            const roleClass = entry.role.toLowerCase() === 'player' ? 'player' : 'narrator';
+            return \`<div class="msg \${roleClass}"><span class="msg-role">\${entry.role}</span> \${entry.text}</div>\`;
+        }).join('');
+        chatLog.scrollTop = chatLog.scrollHeight;
+
+        leftSidebar.innerHTML = ''; rightSidebar.innerHTML = '';
+        Object.keys(state.tags).forEach((category, index) => {
+            const data = state.tags[category];
+            let cardHtml = \`<div class="state-card"><h3>\${category}</h3>\`;
+            for (const [key, value] of Object.entries(data)) {
+                if (key === 'PrimaryID') continue; 
+                cardHtml += \`<div class="state-row"><span>\${key}</span><span>\${value}</span></div>\`;
+            }
+            cardHtml += \`</div>\`;
+            if (index % 2 === 0) leftSidebar.insertAdjacentHTML('beforeend', cardHtml);
+            else rightSidebar.insertAdjacentHTML('beforeend', cardHtml);
+        });
+    }
+
+    async function handleTurn() {
+        const text = inputField.value.trim(); if (!text) return;
+        inputField.value = ''; inputField.disabled = true; sendBtn.disabled = true;
+        gameState.log.push({ role: "Player", text: text }); updateUI(gameState);
+        const result = await sendPlayerAction(text);
+        if (result) updateUI(result.state);
+        else {
+            gameState.log.push({ role: "Player", text: "System Error: Backend disconnected." });
+            updateUI(gameState);
+        }
+        inputField.disabled = false; sendBtn.disabled = false; inputField.focus();
+    }
+
+    // --- VISUALIZE SCENE LOGIC ---
+    window.generateImage = async function() {
+        if (!gameState.log || gameState.log.length === 0) {
+            console.log('No narrative to visualize yet');
+            return;
+        }
+
+        chatLog.innerHTML += \`<div class="msg narrator" id="loading-msg"><span class="msg-role">System</span> 🖌 Generating Image...</div>\`;
+        chatLog.scrollTop = chatLog.scrollHeight;
+        
+        let targetMessage = gameState.log[gameState.log.length - 1].text;
+        for (let i = gameState.log.length - 1; i >= 0; i--) {
+            if (gameState.log[i].role !== 'Player' && gameState.log[i].role !== 'SystemImage') {
+                targetMessage = gameState.log[i].text;
+                break;
+            }
+        }
+
+        try {
+            const response = await fetch(\`\${API_BASE_URL}/api/painter\`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: targetMessage })
+            });
+
+            const data = await response.json();
+            const loader = document.getElementById('loading-msg');
+            if (loader) loader.remove();
+            
+            if (data.success && data.image_base64) {
+                const imgHtml = \`
+                    <div style="margin: 20px 0; border: 1px solid var(--accent-cyan); padding: 4px; background: #000;">
+                        <img src="data:image/jpeg;base64,\${data.image_base64}" style="width: 100%; display: block; opacity: 0.9;">
+                    </div>\`;
+                
+                gameState.log.push({ role: "SystemImage", text: imgHtml });
+                updateUI(gameState);
+                console.log("🎨 Visualized Prompt:", data.refined_prompt);
+            } else {
+                throw new Error(data.error || "Visual synthesis failed.");
+            }
+        } catch (e) {
+            console.error(\`Visualizer Error: \${e.message}\`);
+            const loader = document.getElementById('loading-msg');
+            if (loader) loader.remove();
+            gameState.log.push({ role: "Player", text: \`[ERROR] Visual Feed Corrupted: \${e.message}\` });
+            updateUI(gameState);
+        }
+    };
+
+    document.getElementById('btn-visualize').addEventListener('click', window.generateImage);
+
+    document.getElementById('btn-save').addEventListener('click', () => {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(gameState));
+        const a = document.createElement('a'); a.href = dataStr; a.download = "savegame.json";
+        document.body.appendChild(a); a.click(); a.remove();
+        gameState.log.push({ role: "Narrator", text: "Game State saved." }); updateUI(gameState);
+    });
+
+    document.getElementById('file-load').addEventListener('change', function(event) {
+        const file = event.target.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try { Object.assign(gameState, JSON.parse(e.target.result)); 
+                gameState.log.push({ role: "Narrator", text: "Game loaded." }); updateUI(gameState);
+            } catch(err) { 
+                gameState.log.push({ role: "Player", text: "System Error: Corrupted save." }); updateUI(gameState);
+            }
+        }; reader.readAsText(file);
+    });
+
+    sendBtn.addEventListener('click', handleTurn);
+    inputField.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleTurn(); });
+    updateUI(gameState);
+<\/script>
+</body>
+</html>`;
+    }
+
+    // --- PROJECT EXPORT (ZIP) ---
+    async function exportProjectZip() {
+        const zip = new JSZip();
+        
+        if (!currentGeneratedHTML) {
+            alert("No HTML generated yet. Please fill out the prompt first.");
+            return;
+        }
+
+        // 1. Create a Root Folder inside the ZIP to make extraction clean
+        const projectFolder = zip.folder("AI_Game_Project");
+
+        const appPyContent = document.getElementById('backend-template').textContent;
+        const envContent = document.getElementById('env-template').textContent;
+        const reqContent = document.getElementById('req-template').textContent;
+
+        // 2. Add files into the Root Folder
+        projectFolder.file("app.py", appPyContent.trim());
+        projectFolder.file(".env", envContent.trim());
+        projectFolder.file("requirements.txt", reqContent.trim());
+        projectFolder.folder("templates").file("index.html", currentGeneratedHTML);
+
+        // 3. Generate and Download
+        zip.generateAsync({type:"blob"}).then(function(content) {
+            const url = window.URL.createObjectURL(content);
+            const a = document.createElement("a");
+            a.style.display = "none";
+            a.href = url;
+            a.download = "AI_Game_Project.zip";
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        });
+    }
+
+    // Initialize
+    renderGlyphs();
+    renderAllObjLists();
+    updateOutputs();
+</script>
+
+</body>
+</html>
