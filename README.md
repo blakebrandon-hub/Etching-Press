@@ -7,7 +7,7 @@ into fully playable AI-powered RPGs with automatic state tracking.
 
 ![The Etching Press Interface](https://github.com/user-attachments/assets/786f9df1-1eab-4bf9-908f-2ac0183a2e80)
 
-![Running Game](screenshots/game-ui.png)
+![Running Game](https://github.com/user-attachments/assets/7726f6c4-9a1b-4cdc-b8dc-8f5e8ba11e23)
 
 ---
 
