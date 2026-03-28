@@ -5,7 +5,8 @@
 A visual world-builder and game engine that transforms your lore, characters, and rules 
 into fully playable AI-powered RPGs with automatic state tracking.
 
-![The Etching Press Interface](screenshots/builder-interface.png)
+![The Etching Press Interface](https://github.com/user-attachments/assets/786f9df1-1eab-4bf9-908f-2ac0183a2e80)
+
 ![Running Game](screenshots/game-ui.png)
 
 ---
