@@ -337,7 +337,7 @@ def archive_route():
                 model=CLAUDE_ARCHIVIST_AND_REFINER,
                 system="Summarize the following conversation accurately.",
                 messages=[{"role": "user", "content": log_segment}],
-                max_tokens_to_sample=8000, temperature=0.3
+                max_tokens=8000, temperature=0.3
             )
             return jsonify({"text": response.content[0].text})
         else:
